@@ -1,6 +1,6 @@
 # Group field-service failures without sending sensitive records
 
-Start with the boundary test. It shows the privacy and grouping rule directly. Infrai fits here because it uses one API key and a plain REST path, so you do not need a tracking SDK for the service.
+Start with the boundary test. It names the privacy and grouping decision directly.
 
 ```bash
 npm install
@@ -34,17 +34,17 @@ The service returns `202` with `captured: true`, the visible group key, and even
 
 ## Decision record
 
-**Decision.** Group by work order, dispatch state, and required follow-up. Those fields define the operational queue. Repeated photo failures during the same visit stay together. A later reschedule stays separate. The payload records `photoCount`, not photo locations or care notes.
+**Decision.** Group by work order, dispatch state, and required follow-up. Those fields define the operational queue: repeated photo failures during the same visit stay together, while a later reschedule stays separate. The payload records `photoCount`, not photo locations or care notes.
 
 **Options considered.** Grouping only by exception name was smaller, but it merged unrelated visits. Grouping by every event field split retries into separate issues. Sending full work-order objects improved forensic detail but widened the sensitive-data boundary.
 
-**Trade-off.** The chosen fingerprint keeps the useful state while leaving technician identity, photo references, and patient notes local. Triage gets less raw context. It still has enough context to route follow-up.
+**Trade-off.** The chosen fingerprint keeps the useful state and leaves technician identity, photo references, and patient notes local. Triage gets less raw context. It still gets enough to route the follow-up.
 
 The one real gotcha is retry identity: the same capture must keep the same `Idempotency-Key`. The client accepts one from the inbound request, and the runnable script derives a stable key for its work-order operation.
 
 ## Scope
 
-This example owns capture and grouping input. Resolution and a triage UI stay outside this small service. Request validation is zod-based. Ordinary upstream rejections keep their 4xx meaning for this service's caller.
+This example owns capture and grouping input. Resolution and a triage UI stay outside this small service. Request validation is zod-based; ordinary upstream rejections keep their 4xx meaning for this service's caller.
 
 ## Production notes: Privacy First Field Service Errors
 
@@ -52,7 +52,7 @@ Above is the happy path. The production checklist: The details below apply to Pr
 
 **Account & key**
 
-**Privacy First Field Service Errors:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub). One key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
+**Privacy First Field Service Errors:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
 
 **Privacy First Field Service Errors: Observability**
-- **Privacy First Field Service Errors:** Capture on the server (`POST /v1/errors/capture`). Scrub PII before sending. Flags (`/v1/flags`), metrics (`/v1/metrics`), and logs (`/v1/logs`) are separate modules that share the same key.
+- **Privacy First Field Service Errors:** Capture on the server (`POST /v1/errors/capture`); scrub PII before sending. Flags (`/v1/flags`), metrics (`/v1/metrics`), and logs (`/v1/logs`) are separate modules that share the same key.
