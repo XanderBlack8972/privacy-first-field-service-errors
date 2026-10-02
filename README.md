@@ -34,13 +34,13 @@ The service returns `202` with `captured: true`, the visible group key, and even
 
 ## Decision record
 
-**Decision.** Group by work order, dispatch state, and required follow-up. Those fields define the operational queue: repeated photo failures during the same visit stay together, while a later reschedule stays separate. The payload records `photoCount`, not photo locations or care notes.
+**Decision.** Group by work order, dispatch state, and required follow-up. Those fields define the operational queue: repeated photo failures during the same visit belong together, while a later reschedule remains distinct. The payload records `photoCount`, not photo locations or care notes.
 
 **Options considered.** Grouping only by exception name was smaller, but it merged unrelated visits. Grouping by every event field split retries into separate issues. Sending full work-order objects improved forensic detail but widened the sensitive-data boundary.
 
-**Trade-off.** The chosen fingerprint keeps the useful state and leaves technician identity, photo references, and patient notes local. Triage gets less raw context. It still gets enough to route the follow-up.
+**Trade-off.** The chosen fingerprint preserves actionable state while keeping technician identity, photo references, and patient notes local. Triage has less raw context. It has the context needed to route follow-up.
 
-The one real gotcha is retry identity: the same capture must keep the same `Idempotency-Key`. The client accepts one from the inbound request, and the runnable script derives a stable key for its work-order operation.
+The one real gotcha is retry identity: the same capture must retain the same `Idempotency-Key`. The client accepts one from the inbound request, and the runnable script derives a stable key for its work-order operation.
 
 ## Scope
 
